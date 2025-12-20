@@ -1,0 +1,99 @@
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
+getgenv().SchmecktIntroFinished = false
+
+-- Sound abspielen
+local introSound = Instance.new("Sound")
+introSound.SoundId = "rbxassetid://107187080709114"
+introSound.Volume = 3
+introSound.Parent = SoundService
+introSound:Play()
+
+-- 0.5 Sekunden warten bevor Intro startet
+task.wait(0.5)
+
+-- Jetzt Intro starten
+local gui = Instance.new("ScreenGui")
+gui.Name = "SchmecktIntro"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+overlay.BackgroundTransparency = 1
+overlay.BorderSizePixel = 0
+overlay.ZIndex = 50
+overlay.Parent = gui
+
+local blur = Instance.new("BlurEffect")
+blur.Name = "SchmecktIntroBlur"
+blur.Size = 0
+blur.Parent = Lighting
+
+local introTitle = Instance.new("TextLabel")
+introTitle.BackgroundTransparency = 1
+introTitle.AnchorPoint = Vector2.new(0.5, 0.5)
+introTitle.Position = UDim2.new(0.5, 0, 0.45, 0)
+introTitle.Size = UDim2.new(0, 600, 0, 50)
+introTitle.Font = Enum.Font.GothamBlack
+introTitle.Text = "SCHMECKT X SHADOWPEPPER HUB"
+introTitle.TextColor3 = Color3.new(1, 1, 1)
+introTitle.TextSize = 40
+introTitle.TextTransparency = 1
+introTitle.ZIndex = 52
+introTitle.Parent = overlay
+
+local introSub = Instance.new("TextLabel")
+introSub.BackgroundTransparency = 1
+introSub.AnchorPoint = Vector2.new(0.5, 0.5)
+introSub.Position = UDim2.new(0.5, 0, 0.53, 0)
+introSub.Size = UDim2.new(0, 500, 0, 30)
+introSub.Font = Enum.Font.GothamSemibold
+introSub.Text = "DA HOOD CONTROL PANEL"
+introSub.TextColor3 = Color3.fromRGB(255, 210, 210)
+introSub.TextSize = 22
+introSub.TextTransparency = 1
+introSub.ZIndex = 52
+introSub.Parent = overlay
+
+local scanLine = Instance.new("Frame")
+scanLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+scanLine.BorderSizePixel = 0
+scanLine.Size = UDim2.new(0, 0, 0, 2)
+scanLine.Position = UDim2.new(0.5, 0, 0.58, 0)
+scanLine.AnchorPoint = Vector2.new(0.5, 0.5)
+scanLine.BackgroundTransparency = 1
+scanLine.ZIndex = 53
+scanLine.Parent = overlay
+
+TweenService:Create(blur, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 18}):Play()
+TweenService:Create(introTitle, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(introSub, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(scanLine, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.6, 0, 0, 2), BackgroundTransparency = 0}):Play()
+
+local t0 = tick()
+local conn = RunService.RenderStepped:Connect(function()
+	local t = tick() - t0
+	introTitle.TextSize = 40 * (1 + math.sin(t * 2) * 0.03)
+end)
+
+task.wait(1.2)
+
+getgenv().SchmecktIntroFinished = true
+
+TweenService:Create(blur, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0}):Play()
+TweenService:Create(introTitle, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+TweenService:Create(introSub, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+TweenService:Create(scanLine, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+
+task.wait(0.7)
+if conn then conn:Disconnect() end
+blur:Destroy()
+gui:Destroy()
