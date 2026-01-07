@@ -7,54 +7,58 @@ local ContentProvider = game:GetService("ContentProvider")
 
 getgenv().SchmecktIntroFinished = false
 
+-- cleanup falls doppelt ausgeführt
+pcall(function()
+	local old = CoreGui:FindFirstChild("SchmecktIntro_NoLoading_FadeOut_v6")
+	if old then old:Destroy() end
+end)
+pcall(function()
+	local oldBlur = Lighting:FindFirstChild("SchmecktIntroBlur_v6")
+	if oldBlur then oldBlur:Destroy() end
+end)
+
 local CFG = {
 	Assets = {
 		Fire = "rbxassetid://84301123126206",
 		Logo = "rbxassetid://121759217057084",
 		IntroSfx = "rbxassetid://107187080709114",
-		LoadSfx = "rbxassetid://85417097429863",
 	},
 	Text = {
 		Title = "Schmeckt X ShadowPepper Hub",
 		Sub = "newbois!",
 	},
+	Delay = {
+		VisualStart = 0.6, -- Sound sofort, Visuals nach 0.6s
+	},
 	Times = {
-		FadeIn = 0.16,
-		Grow = 0.55,
-		Hold = 0.35,
-		BobDuration = 1.0,
-		TextFadeDelay = 0.15,
-		TextFadeTime = 0.30,
-		ToLoad = 0.35,
-		Load = 2.50,
-		FadeOut = 0.45,
-		BlurIn = 0.22,
-		BlurOut = 0.50,
+		FadeIn = 0.12,
+		Grow = 0.38,
+		Hold = 0.15,
+		BobDuration = 0.55, -- nur Logo bobbt (Text bewegt sich NICHT)
+		FadeOut = 0.35,     -- Visuals fade out
+		BlurIn = 0.16,
+		BlurOut = 0.35,
 	},
 	Look = {
 		BlurIntro = 18,
-		BlurLoad = 24,
-		OverlayIntroAlpha = 0.20,
-		OverlayLoadAlpha = 0.40,
-		VignetteIntroTransparency = 0.55,
-		VignetteLoadTransparency = 0.45,
+		OverlayAlpha = 0.20,
+		VignetteTransparency = 0.55,
+
 		TitleSize = 52,
 		SubSize = 44,
 		TitleStroke = 2,
 		SubStroke = 2,
+
 		LogoBase = 420,
 		FireBase = 860,
 		FireLayer2Mult = 1.22,
 		FireYOffset = 210,
+
 		TitleColorA = Color3.fromRGB(140, 0, 0),
 		TitleColorB = Color3.fromRGB(255, 90, 40),
 		SubColor = Color3.fromRGB(255, 200, 200),
+
 		CornerStart = UDim.new(0, 0),
-		CornerLoading = UDim.new(1, 0),
-	},
-	Wobble = {
-		TitleX = 3.2, TitleY = 2.2, TitleRot = 1.2,
-		SubX = 3.8, SubY = 2.7, SubRot = 1.6,
 	},
 	Sparks = {
 		Count = 40,
@@ -72,7 +76,7 @@ local function clamp(x, a, b) return (x < a and a) or (x > b and b) or x end
 local function viewportScale()
 	local cam = workspace.CurrentCamera
 	local vs = cam and cam.ViewportSize or Vector2.new(1920, 1080)
-	return clamp(vs.Y / 1080, 0.80, 1.25), vs
+	return clamp(vs.Y / 1080, 0.80, 1.25)
 end
 
 local function create(className, props)
@@ -87,19 +91,26 @@ local function tween(obj, ti, goal)
 	return tw
 end
 
+-- SOUND: sofort abspielen, kein FadeOut, nicht stoppen (kein cut off)
 local introSound = create("Sound", {
 	SoundId = CFG.Assets.IntroSfx,
 	Volume = 3,
 	Parent = SoundService,
 })
 introSound:Play()
+pcall(function()
+	introSound.Ended:Connect(function()
+		pcall(function() introSound:Destroy() end)
+	end)
+end)
 
-task.wait(0.5)
+-- Visuals starten erst nach 0.6s
+task.wait(CFG.Delay.VisualStart)
 
-local scale = (select(1, viewportScale()))
+local scale = viewportScale()
 
 local gui = create("ScreenGui", {
-	Name = "SchmecktIntro_V3_Fixes",
+	Name = "SchmecktIntro_NoLoading_FadeOut_v6",
 	IgnoreGuiInset = true,
 	ResetOnSpawn = false,
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
@@ -116,12 +127,13 @@ local overlay = create("Frame", {
 	Parent = gui,
 })
 
+-- Vignette
 local vignetteParts = {}
 local function vignetteEdge(name, pos, size, rotation)
 	local f = create("Frame", {
 		Name = name,
 		BackgroundColor3 = Color3.new(0, 0, 0),
-		BackgroundTransparency = CFG.Look.VignetteIntroTransparency,
+		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Position = pos,
 		Size = size,
@@ -139,13 +151,13 @@ local function vignetteEdge(name, pos, size, rotation)
 	return f
 end
 
-vignetteEdge("VTop", UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0.22, 0), 90)
+vignetteEdge("VTop",    UDim2.new(0, 0, 0, 0),    UDim2.new(1, 0, 0.22, 0),  90)
 vignetteEdge("VBottom", UDim2.new(0, 0, 0.78, 0), UDim2.new(1, 0, 0.22, 0), -90)
-vignetteEdge("VLeft", UDim2.new(0, 0, 0, 0), UDim2.new(0.14, 0, 1, 0), 0)
-vignetteEdge("VRight", UDim2.new(0.86, 0, 0, 0), UDim2.new(0.14, 0, 1, 0), 180)
+vignetteEdge("VLeft",   UDim2.new(0, 0, 0, 0),    UDim2.new(0.14, 0, 1, 0),   0)
+vignetteEdge("VRight",  UDim2.new(0.86, 0, 0, 0), UDim2.new(0.14, 0, 1, 0), 180)
 
 local blur = create("BlurEffect", {
-	Name = "SchmecktIntroBlur",
+	Name = "SchmecktIntroBlur_v6",
 	Size = 0,
 	Parent = Lighting,
 })
@@ -201,7 +213,7 @@ local logoShadow = create("ImageLabel", {
 	ScaleType = Enum.ScaleType.Crop,
 	Parent = overlay,
 })
-local logoShadowCorner = create("UICorner", { CornerRadius = CFG.Look.CornerStart, Parent = logoShadow })
+create("UICorner", { CornerRadius = CFG.Look.CornerStart, Parent = logoShadow })
 create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = logoShadow })
 
 local logo = create("ImageLabel", {
@@ -217,7 +229,7 @@ local logo = create("ImageLabel", {
 	ScaleType = Enum.ScaleType.Crop,
 	Parent = overlay,
 })
-local logoCorner = create("UICorner", { CornerRadius = CFG.Look.CornerStart, Parent = logo })
+create("UICorner", { CornerRadius = CFG.Look.CornerStart, Parent = logo })
 create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = logo })
 
 local logoStroke = create("UIStroke", {
@@ -262,26 +274,16 @@ local function makeText(name, pos, sizePx, text, font, baseColor, z)
 end
 
 local titlePos = UDim2.new(0.5, 0, 0.62, 0)
-local subPos = UDim2.new(0.5, 0, 0.69, 0)
+local subPos   = UDim2.new(0.5, 0, 0.69, 0)
 
 local introTitle, titleShadow = makeText(
-	"Title",
-	titlePos,
-	CFG.Look.TitleSize,
-	CFG.Text.Title,
-	Enum.Font.GothamBlack,
-	CFG.Look.TitleColorA,
-	57
+	"Title", titlePos, CFG.Look.TitleSize, CFG.Text.Title,
+	Enum.Font.GothamBlack, CFG.Look.TitleColorA, 57
 )
 
 local introSub, subShadow = makeText(
-	"Sub",
-	subPos,
-	CFG.Look.SubSize,
-	CFG.Text.Sub,
-	Enum.Font.GothamBold,
-	CFG.Look.SubColor,
-	57
+	"Sub", subPos, CFG.Look.SubSize, CFG.Text.Sub,
+	Enum.Font.GothamBold, CFG.Look.SubColor, 57
 )
 
 create("UIStroke", {
@@ -306,6 +308,7 @@ create("UIStroke", {
 	Parent = introSub
 })
 
+-- Sparks
 local sparks = {}
 local function spawnSpark(s)
 	s.t0 = os.clock() + rnd:NextNumber(0, 0.25)
@@ -322,10 +325,10 @@ local function spawnSpark(s)
 	s.rotSpd = rnd:NextNumber(-40, 40)
 	s.xDrift = rnd:NextNumber(-10, 10) * scale
 
-	s.cA = Color3.fromRGB(255, 170, 70)
-	s.cB = Color3.fromRGB(255, 90, 40)
+	local cA = Color3.fromRGB(255, 170, 70)
+	local cB = Color3.fromRGB(255, 90, 40)
 
-	s.inst.ImageColor3 = s.cA:Lerp(s.cB, rnd:NextNumber(0.15, 0.65))
+	s.inst.ImageColor3 = cA:Lerp(cB, rnd:NextNumber(0.15, 0.65))
 	s.inst.ImageTransparency = 1
 	s.inst.Rotation = s.rot0
 	s.inst.Size = UDim2.fromOffset(s.size0, s.size0)
@@ -354,78 +357,19 @@ for i = 1, CFG.Sparks.Count do
 end
 
 pcall(function()
-	local list = { logo, logoShadow, fire1, fire2 }
+	local list = { logo, logoShadow, fire1, fire2, introTitle, introSub, titleShadow, subShadow }
 	for _, s in ipairs(sparks) do table.insert(list, s.inst) end
 	ContentProvider:PreloadAsync(list)
 end)
 
-local loadingWrap = create("Frame", {
-	Name = "LoadingWrap",
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 0.92, 0),
-	Size = UDim2.new(0, math.floor(420 * scale), 0, math.floor(70 * scale)),
-	BackgroundTransparency = 1,
-	ZIndex = 60,
-	Parent = overlay,
-})
-
-local loadingText = create("TextLabel", {
-	Name = "LoadingText",
-	BackgroundTransparency = 1,
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 0),
-	Size = UDim2.new(1, 0, 0, math.floor(26 * scale)),
-	Font = Enum.Font.GothamBold,
-	Text = "Loading",
-	TextColor3 = Color3.fromRGB(255, 255, 255),
-	TextSize = math.floor(22 * scale),
-	TextTransparency = 1,
-	ZIndex = 61,
-	Parent = loadingWrap,
-})
-
-local barH = math.max(8, math.floor(10 * scale))
-local bar = create("Frame", {
-	Name = "Bar",
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, math.floor(36 * scale)),
-	Size = UDim2.new(1, 0, 0, barH),
-	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-	BackgroundTransparency = 0.90,
-	BorderSizePixel = 0,
-	ZIndex = 61,
-	Parent = loadingWrap,
-})
-create("UICorner", { CornerRadius = UDim.new(0, math.floor(barH / 2)), Parent = bar })
-create("UIStroke", { Color = Color3.fromRGB(255, 140, 140), Thickness = 1, Transparency = 0.65, Parent = bar })
-
-local fill = create("Frame", {
-	Name = "Fill",
-	AnchorPoint = Vector2.new(0, 0.5),
-	Position = UDim2.new(0, 0, 0.5, 0),
-	Size = UDim2.new(0, 0, 1, 0),
-	BackgroundColor3 = Color3.fromRGB(255, 110, 80),
-	BackgroundTransparency = 0.10,
-	BorderSizePixel = 0,
-	ZIndex = 62,
-	Parent = bar,
-})
-create("UICorner", { CornerRadius = UDim.new(0, math.floor(barH / 2)), Parent = fill })
-local fillGrad = Instance.new("UIGradient")
-fillGrad.Rotation = 0
-fillGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 70, 60)),
-	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 190, 90)),
-})
-fillGrad.Parent = fill
-
+-- IN (FadeIn + Grow)
 local baseLogo = math.floor(CFG.Look.LogoBase * scale)
 local baseFire = math.floor(CFG.Look.FireBase * scale)
 
 tween(blur, TweenInfo.new(CFG.Times.BlurIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = CFG.Look.BlurIntro })
-tween(overlay, TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 - CFG.Look.OverlayIntroAlpha })
+tween(overlay, TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 - CFG.Look.OverlayAlpha })
 for _, v in ipairs(vignetteParts) do
-	tween(v, TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = CFG.Look.VignetteIntroTransparency })
+	tween(v, TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = CFG.Look.VignetteTransparency })
 end
 
 local fadeInfo = TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -449,103 +393,65 @@ tween(fire2, TweenInfo.new(CFG.Times.Grow, Enum.EasingStyle.Quad, Enum.EasingDir
 tween(fire1, fadeInfo, { ImageTransparency = 0.32 })
 tween(fire2, fadeInfo, { ImageTransparency = 0.40 })
 
-local phase = "Intro"
-local t0 = os.clock()
+-- Text sizes merken (für Outro shrink)
+local baseTitleTextSize = introTitle.TextSize
+local baseSubTextSize = introSub.TextSize
 
-local baseTitlePos = introTitle.Position
-local baseSubPos = introSub.Position
-local baseTitleSize = introTitle.TextSize
-local baseSubSize = introSub.TextSize
-local baseRot1 = fire1.Rotation
-local baseRot2 = fire2.Rotation
-
-local loadingStart = 0
-local loadingSound
+-- Render loop: nur Feuer + Sparks animieren (Text bleibt komplett still)
+local tStart = os.clock()
+local baseRot1, baseRot2 = fire1.Rotation, fire2.Rotation
 
 local conn
 conn = RunService.RenderStepped:Connect(function()
 	local now = os.clock()
-	local t = now - t0
+	local t = now - tStart
 
-	if phase == "Intro" then
-		local n1 = (math.noise(t * 1.6, 0, 0) * 2 - 1)
-		local n2 = (math.noise(0, t * 1.9, 0) * 2 - 1)
-		local n3 = (math.noise(t * 2.2, t * 1.1, 0) * 2 - 1)
+	local nn1 = math.noise(t * 2.2, 0, 0)
+	local nn2 = math.noise(0, t * 1.9, 0)
 
-		local tx = math.sin(t * 12.0) * CFG.Wobble.TitleX + n1 * 1.6
-		local ty = math.cos(t * 9.5) * CFG.Wobble.TitleY + n2 * 1.2
-		introTitle.Position = UDim2.new(baseTitlePos.X.Scale, baseTitlePos.X.Offset + tx, baseTitlePos.Y.Scale, baseTitlePos.Y.Offset + ty)
-		titleShadow.Position = UDim2.new(introTitle.Position.X.Scale, introTitle.Position.X.Offset + math.floor(2 * scale), introTitle.Position.Y.Scale, introTitle.Position.Y.Offset + math.floor(2 * scale))
-		introTitle.Rotation = math.sin(t * 11.0) * CFG.Wobble.TitleRot + n3 * 0.5
-		introTitle.TextSize = baseTitleSize * (1 + math.sin(t * 7.0) * 0.030)
+	fire1.Rotation = baseRot1 + (math.sin(t * 6.5) * 0.6) + nn2 * 0.8
+	fire2.Rotation = baseRot2 - (math.sin(t * 6.0) * 0.6) + nn1 * 0.9
 
-		local sx = math.sin(t * 13.5 + 0.7) * CFG.Wobble.SubX + n2 * 1.8
-		local sy = math.cos(t * 10.5 + 0.3) * CFG.Wobble.SubY + n1 * 1.4
-		introSub.Position = UDim2.new(baseSubPos.X.Scale, baseSubPos.X.Offset + sx, baseSubPos.Y.Scale, baseSubPos.Y.Offset + sy)
-		subShadow.Position = UDim2.new(introSub.Position.X.Scale, introSub.Position.X.Offset + math.floor(2 * scale), introSub.Position.Y.Scale, introSub.Position.Y.Offset + math.floor(2 * scale))
-		introSub.Rotation = math.sin(t * 12.5 + 0.4) * CFG.Wobble.SubRot + n3 * 0.7
-		introSub.TextSize = baseSubSize * (1 + math.sin(t * 8.2 + 0.8) * 0.040)
+	local flick = 0.5 + 0.5 * math.sin(t * 16.0 + nn1 * 2.0)
+	fire1.ImageTransparency = clamp(0.30 + 0.08 * flick, 0.26, 0.48)
+	fire2.ImageTransparency = clamp(0.36 + 0.10 * flick, 0.30, 0.58)
 
-		local nn1 = math.noise(t * 2.2, 0, 0)
-		local nn2 = math.noise(0, t * 1.9, 0)
-
-		fire1.Rotation = baseRot1 + (math.sin(t * 6.5) * 0.6) + nn2 * 0.8
-		fire2.Rotation = baseRot2 - (math.sin(t * 6.0) * 0.6) + nn1 * 0.9
-
-		local flick = 0.5 + 0.5 * math.sin(t * 16.0 + nn1 * 2.0)
-		fire1.ImageTransparency = clamp(0.30 + 0.08 * flick, 0.26, 0.48)
-		fire2.ImageTransparency = clamp(0.36 + 0.10 * flick, 0.30, 0.58)
-
-		for _, s in ipairs(sparks) do
-			local age = now - s.t0
-			if age < 0 then
-				s.inst.ImageTransparency = 1
+	for _, s in ipairs(sparks) do
+		local age = now - s.t0
+		if age < 0 then
+			s.inst.ImageTransparency = 1
+		else
+			local p = age / s.life
+			if p >= 1 then
+				spawnSpark(s)
 			else
-				local p = age / s.life
-				if p >= 1 then
-					spawnSpark(s)
-				else
-					local ease = p ^ 0.55
-					local riseY = ease * s.rise
-					local x = s.dx0 + (s.xDrift * p)
+				local ease = p ^ 0.55
+				local riseY = ease * s.rise
+				local x = s.dx0 + (s.xDrift * p)
 
-					s.inst.Position = UDim2.new(
-						firePos.X.Scale, firePos.X.Offset + x,
-						firePos.Y.Scale, firePos.Y.Offset + s.dy0 - riseY
-					)
+				s.inst.Position = UDim2.new(
+					firePos.X.Scale, firePos.X.Offset + x,
+					firePos.Y.Scale, firePos.Y.Offset + s.dy0 - riseY
+				)
 
-					local pulse = math.sin(p * math.pi)
-					local sizePx = s.size1 + (s.size0 - s.size1) * pulse
-					s.inst.Size = UDim2.fromOffset(sizePx, sizePx)
+				local pulse = math.sin(p * math.pi)
+				local sizePx = s.size1 + (s.size0 - s.size1) * pulse
+				s.inst.Size = UDim2.fromOffset(sizePx, sizePx)
 
-					s.inst.Rotation = s.rot0 + s.rotSpd * p
+				s.inst.Rotation = s.rot0 + s.rotSpd * p
 
-					local aIn = clamp(p / 0.10, 0, 1)
-					local aOut = clamp((p - 0.25) / 0.75, 0, 1)
-					local a = (1 - aOut) * aIn
-					s.inst.ImageTransparency = clamp(1 - (0.50 * a), 0.30, 1)
-				end
+				local aIn = clamp(p / 0.10, 0, 1)
+				local aOut = clamp((p - 0.25) / 0.75, 0, 1)
+				local a = (1 - aOut) * aIn
+				s.inst.ImageTransparency = clamp(1 - (0.50 * a), 0.30, 1)
 			end
 		end
-	end
-
-	if phase == "Loading" then
-		local lt = now - loadingStart
-		local dots = string.rep(".", (math.floor(lt * 2) % 4))
-		loadingText.Text = "Loading" .. dots
-		fillGrad.Rotation = (lt * 140) % 360
-
-		local pulse = 1 + math.sin(lt * 3) * 0.03
-		local base = math.floor(150 * scale)
-		logo.Size = UDim2.fromOffset(base * pulse, base * pulse)
-		logoShadow.Size = logo.Size
-		logo.Rotation = math.sin(lt * 2) * 1.8
-		logoStroke.Transparency = 0.30 + math.sin(lt * 4) * 0.12
 	end
 end)
 
 task.wait(CFG.Times.Grow)
 
+-- Logo bobbt kurz (Text bleibt still)
 do
 	local baseLogoPos = logo.Position
 	local baseShadowPos = logoShadow.Position
@@ -555,20 +461,9 @@ do
 	local amplitudePx = 7 * scale
 	local speedHz = 2.8
 
-	local fadedText = false
-	local textFadeTi = TweenInfo.new(CFG.Times.TextFadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
 	while true do
 		local t = os.clock() - start
 		if t >= duration then break end
-
-		if (not fadedText) and t >= CFG.Times.TextFadeDelay then
-			fadedText = true
-			tween(introTitle, textFadeTi, { TextTransparency = 1 })
-			tween(titleShadow, textFadeTi, { TextTransparency = 1 })
-			tween(introSub, textFadeTi, { TextTransparency = 1 })
-			tween(subShadow, textFadeTi, { TextTransparency = 1 })
-		end
 
 		local y = math.sin(t * math.pi * 2 * speedHz) * amplitudePx
 		logo.Position = UDim2.new(baseLogoPos.X.Scale, baseLogoPos.X.Offset, baseLogoPos.Y.Scale, baseLogoPos.Y.Offset + y)
@@ -583,90 +478,37 @@ end
 
 task.wait(CFG.Times.Hold)
 
-phase = "ToLoad"
-
-introTitle.Rotation = 0
-introSub.Rotation = 0
-introTitle.TextSize = baseTitleSize
-introSub.TextSize = baseSubSize
-introTitle.Position = baseTitlePos
-introSub.Position = baseSubPos
-
-local quick = TweenInfo.new(CFG.Times.ToLoad, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-tween(introTitle, quick, { TextTransparency = 1 })
-tween(titleShadow, quick, { TextTransparency = 1 })
-tween(introSub, quick, { TextTransparency = 1 })
-tween(subShadow, quick, { TextTransparency = 1 })
-
-tween(fire1, quick, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
-tween(fire2, quick, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
-for _, s in ipairs(sparks) do
-	tween(s.inst, quick, { ImageTransparency = 1 })
-end
-
-tween(blur, TweenInfo.new(0.30, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = CFG.Look.BlurLoad })
-tween(overlay, TweenInfo.new(0.30, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 - CFG.Look.OverlayLoadAlpha })
-for _, v in ipairs(vignetteParts) do
-	tween(v, TweenInfo.new(0.30, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = CFG.Look.VignetteLoadTransparency })
-end
-
-tween(logoCorner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CornerRadius = CFG.Look.CornerLoading })
-tween(logoShadowCorner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CornerRadius = CFG.Look.CornerLoading })
-
-local loadLogoSize = math.floor(150 * scale)
-tween(logo, TweenInfo.new(0.40, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-	Size = UDim2.fromOffset(loadLogoSize, loadLogoSize),
-	Position = UDim2.new(0.5, 0, 0.45, 0)
-})
-tween(logoShadow, TweenInfo.new(0.40, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-	Size = UDim2.fromOffset(loadLogoSize, loadLogoSize),
-	Position = UDim2.new(0.5, 0, 0.45, math.floor(6 * scale))
-})
-
-tween(logoStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Transparency = 0.35 })
-
-tween(loadingText, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 })
-tween(fill, TweenInfo.new(CFG.Times.Load, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 1, 0) })
-
-loadingSound = create("Sound", {
-	SoundId = CFG.Assets.LoadSfx,
-	Volume = 1.5,
-	Parent = SoundService
-})
-loadingSound:Play()
-
-task.wait(CFG.Times.ToLoad)
-
-phase = "Loading"
-loadingStart = os.clock()
-
-task.wait(CFG.Times.Load)
-
+-- OUTRO: Visuals fade out + shrink (Sound bleibt unverändert)
 if conn then conn:Disconnect() conn = nil end
-logo.Rotation = 0
-
-getgenv().SchmecktIntroFinished = true
 
 local out = TweenInfo.new(CFG.Times.FadeOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
+-- Text: nicht bewegen, aber beim Logo-Shrink mit kleiner werden + ausfaden
+tween(introTitle, out, { TextTransparency = 1, TextSize = 1 })
+tween(titleShadow, out, { TextTransparency = 1, TextSize = 1 })
+tween(introSub, out, { TextTransparency = 1, TextSize = 1 })
+tween(subShadow, out, { TextTransparency = 1, TextSize = 1 })
+
+-- Logo / Feuer / Sparks raus
 tween(logo, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoShadow, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoStroke, out, { Transparency = 1 })
-tween(loadingText, out, { TextTransparency = 1 })
+
+tween(fire1, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
+tween(fire2, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
+for _, s in ipairs(sparks) do
+	tween(s.inst, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
+end
+
 tween(overlay, out, { BackgroundTransparency = 1 })
 for _, v in ipairs(vignetteParts) do
 	tween(v, out, { BackgroundTransparency = 1 })
 end
 tween(blur, TweenInfo.new(CFG.Times.BlurOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = 0 })
 
-if loadingSound then
-	tween(loadingSound, TweenInfo.new(0.30, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Volume = 0 })
-end
+task.wait(math.max(CFG.Times.FadeOut, CFG.Times.BlurOut) + 0.05)
 
-task.wait(CFG.Times.FadeOut + 0.10)
+getgenv().SchmecktIntroFinished = true
 
-pcall(function() if loadingSound then loadingSound:Destroy() end end)
-pcall(function() introSound:Destroy() end)
-pcall(function() blur:Destroy() end)
-pcall(function() gui:Destroy() end)
+pcall(function() if blur then blur:Destroy() end end)
+pcall(function() if gui then gui:Destroy() end end)
