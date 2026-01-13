@@ -24,18 +24,18 @@ local CFG = {
 		IntroSfx = "rbxassetid://107187080709114",
 	},
 	Text = {
-		Title = "Schmeckt X ShadowPepper Hub",
+		Title = "ShadowPepper Hub",
 		Sub = "newbois!",
 	},
 	Delay = {
-		VisualStart = 0.6, -- Sound sofort, Visuals nach 0.6s
+		VisualStart = 0.6,
 	},
 	Times = {
 		FadeIn = 0.12,
 		Grow = 0.38,
 		Hold = 0.15,
-		BobDuration = 0.55, -- nur Logo bobbt (Text bewegt sich NICHT)
-		FadeOut = 0.35,     -- Visuals fade out
+		BobDuration = 0.55,
+		FadeOut = 0.35,
 		BlurIn = 0.16,
 		BlurOut = 0.35,
 	},
@@ -91,7 +91,6 @@ local function tween(obj, ti, goal)
 	return tw
 end
 
--- SOUND: sofort abspielen, kein FadeOut, nicht stoppen (kein cut off)
 local introSound = create("Sound", {
 	SoundId = CFG.Assets.IntroSfx,
 	Volume = 3,
@@ -104,7 +103,6 @@ pcall(function()
 	end)
 end)
 
--- Visuals starten erst nach 0.6s
 task.wait(CFG.Delay.VisualStart)
 
 local scale = viewportScale()
@@ -127,7 +125,6 @@ local overlay = create("Frame", {
 	Parent = gui,
 })
 
--- Vignette
 local vignetteParts = {}
 local function vignetteEdge(name, pos, size, rotation)
 	local f = create("Frame", {
@@ -308,7 +305,6 @@ create("UIStroke", {
 	Parent = introSub
 })
 
--- Sparks
 local sparks = {}
 local function spawnSpark(s)
 	s.t0 = os.clock() + rnd:NextNumber(0, 0.25)
@@ -362,7 +358,6 @@ pcall(function()
 	ContentProvider:PreloadAsync(list)
 end)
 
--- IN (FadeIn + Grow)
 local baseLogo = math.floor(CFG.Look.LogoBase * scale)
 local baseFire = math.floor(CFG.Look.FireBase * scale)
 
@@ -393,11 +388,9 @@ tween(fire2, TweenInfo.new(CFG.Times.Grow, Enum.EasingStyle.Quad, Enum.EasingDir
 tween(fire1, fadeInfo, { ImageTransparency = 0.32 })
 tween(fire2, fadeInfo, { ImageTransparency = 0.40 })
 
--- Text sizes merken (für Outro shrink)
 local baseTitleTextSize = introTitle.TextSize
 local baseSubTextSize = introSub.TextSize
 
--- Render loop: nur Feuer + Sparks animieren (Text bleibt komplett still)
 local tStart = os.clock()
 local baseRot1, baseRot2 = fire1.Rotation, fire2.Rotation
 
@@ -451,7 +444,6 @@ end)
 
 task.wait(CFG.Times.Grow)
 
--- Logo bobbt kurz (Text bleibt still)
 do
 	local baseLogoPos = logo.Position
 	local baseShadowPos = logoShadow.Position
@@ -478,18 +470,15 @@ end
 
 task.wait(CFG.Times.Hold)
 
--- OUTRO: Visuals fade out + shrink (Sound bleibt unverändert)
 if conn then conn:Disconnect() conn = nil end
 
 local out = TweenInfo.new(CFG.Times.FadeOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Text: nicht bewegen, aber beim Logo-Shrink mit kleiner werden + ausfaden
 tween(introTitle, out, { TextTransparency = 1, TextSize = 1 })
 tween(titleShadow, out, { TextTransparency = 1, TextSize = 1 })
 tween(introSub, out, { TextTransparency = 1, TextSize = 1 })
 tween(subShadow, out, { TextTransparency = 1, TextSize = 1 })
 
--- Logo / Feuer / Sparks raus
 tween(logo, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoShadow, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoStroke, out, { Transparency = 1 })
