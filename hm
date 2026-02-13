@@ -7,19 +7,18 @@ local ContentProvider = game:GetService("ContentProvider")
 getgenv().SchmecktIntroFinished = false
 
 pcall(function()
-	local old = CoreGui:FindFirstChild("SchmecktIntro_NoLoading_FadeOut_v7")
+	local old = CoreGui:FindFirstChild("SchmecktIntro_Red_MassiveFire")
 	if old then old:Destroy() end
 end)
 
 local CFG = {
 	Assets = {
-		Fire = "rbxassetid://98962288947521",
+		Fire = "rbxassetid://84301123126206", 
 		Logo = "rbxassetid://121759217057084",
-		Logo2 = "rbxassetid://118676632373972",
 		IntroSfx = "rbxassetid://107187080709114",
 	},
 	Text = {
-		Title = "Meulios + ShadowPepper Hub",
+		Title = "ShadowPepper Hub",
 		Sub = "newbois!",
 	},
 	Delay = {
@@ -42,23 +41,22 @@ local CFG = {
 		SubStroke = 2,
 
 		LogoBase = 420,
-		Logo2Base = 280,
-		Logo2OffsetX = 180,
-		Logo2OffsetY = -50,
 
-		TitleColorA = Color3.fromRGB(255, 20, 147),
-		TitleColorB = Color3.fromRGB(220, 20, 60),
-		SubColor = Color3.fromRGB(255, 105, 180),
+		TitleColorA = Color3.fromRGB(255, 60, 60),
+		TitleColorB = Color3.fromRGB(180, 0, 0),
+		SubColor = Color3.fromRGB(255, 150, 150),
 
 		CornerStart = UDim.new(0, 0),
 	},
 	Sparks = {
-		Count = 60,
-		RisePx = 320,
-		SpreadX = 200,
-		SpreadY = 80,
-		SizeMin = 150,
-		SizeMax = 600,
+		Count = 65,       -- Hohe Anzahl behalten
+		RisePx = 380,     -- Etwas höher steigen lassen bei großen Flammen
+		SpreadX = 250,    -- Breiter
+		SpreadY = 120,    -- Tiefer
+		
+		-- HIER WURDE ES VERGRÖßERT:
+		SizeMin = 300,    -- War 150 -> Jetzt 300 (Massiver Start)
+		SizeMax = 950,    -- War 600 -> Jetzt 950 (Riesige Flammen)
 	},
 }
 
@@ -100,7 +98,7 @@ task.wait(CFG.Delay.VisualStart)
 local scale = viewportScale()
 
 local gui = create("ScreenGui", {
-	Name = "SchmecktIntro_NoLoading_FadeOut_v7",
+	Name = "SchmecktIntro_Red_MassiveFire",
 	IgnoreGuiInset = true,
 	ResetOnSpawn = false,
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
@@ -182,57 +180,10 @@ create("UICorner", { CornerRadius = CFG.Look.CornerStart, Parent = logo })
 create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = logo })
 
 local logoStroke = create("UIStroke", {
-	Color = Color3.fromRGB(255, 110, 180),
+	Color = Color3.fromRGB(255, 110, 110),
 	Thickness = math.max(2, math.floor(3 * scale)),
 	Transparency = 1,
 	Parent = logo
-})
-
-local logo2Pos = UDim2.new(
-	centerPos.X.Scale, 
-	centerPos.X.Offset + math.floor(CFG.Look.Logo2OffsetX * scale), 
-	centerPos.Y.Scale, 
-	centerPos.Y.Offset + math.floor(CFG.Look.Logo2OffsetY * scale)
-)
-
-local logo2Shadow = create("ImageLabel", {
-	Name = "Logo2Shadow",
-	BackgroundTransparency = 1,
-	BorderSizePixel = 0,
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.new(logo2Pos.X.Scale, logo2Pos.X.Offset, logo2Pos.Y.Scale, logo2Pos.Y.Offset + math.floor(6 * scale)),
-	Size = UDim2.fromOffset(0, 0),
-	ZIndex = 54,
-	Image = CFG.Assets.Logo2,
-	ImageTransparency = 1,
-	ImageColor3 = Color3.fromRGB(0, 0, 0),
-	ScaleType = Enum.ScaleType.Fit,
-	Parent = overlay,
-})
-create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = logo2Shadow })
-create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = logo2Shadow })
-
-local logo2 = create("ImageLabel", {
-	Name = "Logo2",
-	BackgroundTransparency = 1,
-	BorderSizePixel = 0,
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = logo2Pos,
-	Size = UDim2.fromOffset(0, 0),
-	ZIndex = 56,
-	Image = CFG.Assets.Logo2,
-	ImageTransparency = 1,
-	ScaleType = Enum.ScaleType.Fit,
-	Parent = overlay,
-})
-create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = logo2 })
-create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = logo2 })
-
-local logo2Stroke = create("UIStroke", {
-	Color = Color3.fromRGB(255, 20, 147),
-	Thickness = math.max(3, math.floor(4 * scale)),
-	Transparency = 1,
-	Parent = logo2
 })
 
 local function makeText(name, pos, sizePx, text, font, baseColor, z)
@@ -283,7 +234,7 @@ local introSub, subShadow = makeText(
 )
 
 create("UIStroke", {
-	Color = Color3.fromRGB(80, 0, 40),
+	Color = Color3.fromRGB(80, 0, 0),
 	Thickness = math.max(1, math.floor(CFG.Look.TitleStroke * scale)),
 	Transparency = 0.25,
 	Parent = introTitle
@@ -292,23 +243,23 @@ create("UIStroke", {
 local titleGrad = Instance.new("UIGradient")
 titleGrad.Rotation = 45
 titleGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 20, 147)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 100)),
-	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(220, 20, 60)),
+	ColorSequenceKeypoint.new(0.0, CFG.Look.TitleColorA),
+	ColorSequenceKeypoint.new(0.5, CFG.Look.TitleColorB),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(100, 0, 0)),
 })
 titleGrad.Parent = introTitle
 
 local subGrad = Instance.new("UIGradient")
 subGrad.Rotation = -45
 subGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 20, 147)),
-	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 182, 193)),
+	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 150, 150)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 50, 50)),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(200, 0, 0)),
 })
 subGrad.Parent = introSub
 
 create("UIStroke", {
-	Color = Color3.fromRGB(60, 0, 30),
+	Color = Color3.fromRGB(50, 0, 0),
 	Thickness = math.max(1, math.floor(CFG.Look.SubStroke * scale)),
 	Transparency = 0.35,
 	Parent = introSub
@@ -330,10 +281,11 @@ local function spawnSpark(s)
 	s.rotSpd = rnd:NextNumber(-50, 50)
 	s.xDrift = rnd:NextNumber(-20, 20) * scale
 
-	local cA = Color3.fromRGB(255, 105, 180)
-	local cB = Color3.fromRGB(255, 20, 60)
+	-- Rotes Feuer Farbschema
+	local cA = Color3.fromRGB(255, 160, 50) -- Orange/Gelb
+	local cB = Color3.fromRGB(255, 30, 30)  -- Tiefes Rot
 
-	s.inst.ImageColor3 = cA:Lerp(cB, rnd:NextNumber(0.15, 0.65))
+	s.inst.ImageColor3 = cA:Lerp(cB, rnd:NextNumber(0.15, 0.75))
 	s.inst.ImageTransparency = 1
 	s.inst.Rotation = s.rot0
 	s.inst.Size = UDim2.fromOffset(s.size0, s.size0)
@@ -362,13 +314,12 @@ for i = 1, CFG.Sparks.Count do
 end
 
 pcall(function()
-	local list = { logo, logoShadow, logo2, logo2Shadow, introTitle, introSub, titleShadow, subShadow }
+	local list = { logo, logoShadow, introTitle, introSub, titleShadow, subShadow }
 	for _, s in ipairs(sparks) do table.insert(list, s.inst) end
 	ContentProvider:PreloadAsync(list)
 end)
 
 local baseLogo = math.floor(CFG.Look.LogoBase * scale)
-local baseLogo2 = math.floor(CFG.Look.Logo2Base * scale)
 
 tween(overlay, TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 - CFG.Look.OverlayAlpha })
 for _, v in ipairs(vignetteParts) do
@@ -381,10 +332,6 @@ local growInfo = TweenInfo.new(CFG.Times.Grow, Enum.EasingStyle.Back, Enum.Easin
 tween(logo, fadeInfo, { ImageTransparency = 0 })
 tween(logoShadow, fadeInfo, { ImageTransparency = 0.65 })
 
-tween(logo2, fadeInfo, { ImageTransparency = 0 })
-tween(logo2Shadow, fadeInfo, { ImageTransparency = 0.65 })
-tween(logo2Stroke, fadeInfo, { Transparency = 0.3 })
-
 tween(introTitle, fadeInfo, { TextTransparency = 0 })
 tween(titleShadow, fadeInfo, { TextTransparency = 0.35 })
 tween(introSub, fadeInfo, { TextTransparency = 0 })
@@ -392,9 +339,6 @@ tween(subShadow, fadeInfo, { TextTransparency = 0.45 })
 
 tween(logo, growInfo, { Size = UDim2.fromOffset(baseLogo, baseLogo) })
 tween(logoShadow, growInfo, { Size = UDim2.fromOffset(baseLogo, baseLogo) })
-
-tween(logo2, growInfo, { Size = UDim2.fromOffset(baseLogo2, baseLogo2) })
-tween(logo2Shadow, growInfo, { Size = UDim2.fromOffset(baseLogo2, baseLogo2) })
 
 local tStart = os.clock()
 
@@ -440,8 +384,6 @@ task.wait(CFG.Times.Grow)
 do
 	local baseLogoPos = logo.Position
 	local baseShadowPos = logoShadow.Position
-	local baseLogo2Pos = logo2.Position
-	local baseLogo2ShadowPos = logo2Shadow.Position
 
 	local start = os.clock()
 	local duration = CFG.Times.BobDuration
@@ -453,21 +395,15 @@ do
 		if t >= duration then break end
 
 		local y = math.sin(t * math.pi * 2 * speedHz) * amplitudePx
-		local y2 = math.sin((t + 0.1) * math.pi * 2 * speedHz) * amplitudePx
 
 		logo.Position = UDim2.new(baseLogoPos.X.Scale, baseLogoPos.X.Offset, baseLogoPos.Y.Scale, baseLogoPos.Y.Offset + y)
 		logoShadow.Position = UDim2.new(baseShadowPos.X.Scale, baseShadowPos.X.Offset, baseShadowPos.Y.Scale, baseShadowPos.Y.Offset + y)
-
-		logo2.Position = UDim2.new(baseLogo2Pos.X.Scale, baseLogo2Pos.X.Offset, baseLogo2Pos.Y.Scale, baseLogo2Pos.Y.Offset + y2)
-		logo2Shadow.Position = UDim2.new(baseLogo2ShadowPos.X.Scale, baseLogo2ShadowPos.X.Offset, baseLogo2ShadowPos.Y.Scale, baseLogo2ShadowPos.Y.Offset + y2)
 
 		RunService.RenderStepped:Wait()
 	end
 
 	logo.Position = baseLogoPos
 	logoShadow.Position = baseShadowPos
-	logo2.Position = baseLogo2Pos
-	logo2Shadow.Position = baseLogo2ShadowPos
 end
 
 task.wait(CFG.Times.Hold)
@@ -484,10 +420,6 @@ tween(subShadow, out, { TextTransparency = 1, TextSize = 1 })
 tween(logo, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoShadow, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
 tween(logoStroke, out, { Transparency = 1 })
-
-tween(logo2, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
-tween(logo2Shadow, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
-tween(logo2Stroke, out, { Transparency = 1 })
 
 for _, s in ipairs(sparks) do
 	tween(s.inst, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
