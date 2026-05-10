@@ -13,60 +13,48 @@ end)
 
 local CFG = {
 	Assets = {
-		Fire = "rbxassetid://84301123126206", 
+		Fire = "rbxassetid://84301123126206",
 		Logo = "rbxassetid://121759217057084",
 		IntroSfx = "rbxassetid://107187080709114",
-		ImpactSfx = "rbxassetid://124126843578298", -- DEIN NEUER SOUND
 	},
 	Text = {
 		Title = "ShadowPepper Hub",
 		Sub = "newbois!",
-		Rebirth = "REBIRTHED", -- NEUER TEXT
 	},
 	Delay = {
-		VisualStart = 0.6,
+		VisualStart = 0.45,
 	},
 	Times = {
-		FadeIn = 0.12,
-		Grow = 0.38,
-		Hold = 0.15,
-		BobDuration = 0.8,
-		
-		-- NEUE TIMINGS FÜR DEN DROP
-		PreDropWait = 0.3,
-		DropAnim = 0.25, 
-		HoldAfterDrop = 1.8, 
-		
+		FadeIn = 0.18,
+		Grow = 0.35,
+		Hold = 0.25,
+		BobDuration = 0.75,
 		FadeOut = 0.35,
 	},
 	Look = {
 		OverlayAlpha = 0.20,
 		VignetteTransparency = 0.55,
 
-		TitleSize = 52,
-		SubSize = 44,
-		RebirthSize = 85, -- EXTRA GROß FÜR DEN IMPACT
+		TitleSize = 48,
+		SubSize = 36,
 		TitleStroke = 2,
 		SubStroke = 2,
 
-		LogoBase = 420,
+		LogoBase = 400,
 
 		TitleColorA = Color3.fromRGB(255, 60, 60),
 		TitleColorB = Color3.fromRGB(180, 0, 0),
 		SubColor = Color3.fromRGB(255, 150, 150),
-		
-		RebirthColorA = Color3.fromRGB(255, 20, 20),
-		RebirthColorB = Color3.fromRGB(130, 0, 0),
 
 		CornerStart = UDim.new(0, 0),
 	},
 	Sparks = {
-		Count = 65,       
-		RisePx = 380,     
-		SpreadX = 250,    
-		SpreadY = 120,    
-		SizeMin = 300,    
-		SizeMax = 950,    
+		Count = 50,
+		RisePx = 320,
+		SpreadX = 220,
+		SpreadY = 100,
+		SizeMin = 280,
+		SizeMax = 820,
 	},
 }
 
@@ -93,7 +81,7 @@ end
 
 local introSound = create("Sound", {
 	SoundId = CFG.Assets.IntroSfx,
-	Volume = 3,
+	Volume = 2.8,
 	Parent = SoundService,
 })
 introSound:Play()
@@ -202,7 +190,7 @@ local function makeText(name, pos, sizePx, text, font, baseColor, z)
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(pos.X.Scale, pos.X.Offset + math.floor(3 * scale), pos.Y.Scale, pos.Y.Offset + math.floor(3 * scale)),
-		Size = UDim2.new(0, math.floor(1100 * scale), 0, math.floor(100 * scale)),
+		Size = UDim2.new(0, math.floor(900 * scale), 0, math.floor(80 * scale)),
 		Font = font,
 		Text = text,
 		TextColor3 = Color3.fromRGB(0, 0, 0),
@@ -232,50 +220,38 @@ end
 
 local titlePos = UDim2.new(0.5, 0, 0.52, 0)
 local subPos   = UDim2.new(0.5, 0, 0.58, 0)
-local rebirthStartPos = UDim2.new(0.5, 0, -0.3, 0) -- Startet weit über dem Bildschirm
-local rebirthEndPos = UDim2.new(0.5, 0, 0.45, 0)   -- Landet mitten auf dem Logo
 
--- Initialisiere Texte
 local introTitle, titleShadow = makeText("Title", titlePos, CFG.Look.TitleSize, CFG.Text.Title, Enum.Font.GothamBlack, CFG.Look.TitleColorA, 57)
 local introSub, subShadow = makeText("Sub", subPos, CFG.Look.SubSize, CFG.Text.Sub, Enum.Font.GothamBold, CFG.Look.SubColor, 57)
-local rebirthTitle, rebirthShadow = makeText("Rebirth", rebirthStartPos, CFG.Look.RebirthSize, CFG.Text.Rebirth, Enum.Font.GothamBlack, CFG.Look.RebirthColorA, 60)
 
--- Rebirth Styling (Tougher Look)
-rebirthTitle.Rotation = -4 -- Leicht schräg für den aggressiven Look
-rebirthShadow.Rotation = -4
-create("UIStroke", { Color = Color3.fromRGB(50, 0, 0), Thickness = 4, Transparency = 0, Parent = rebirthTitle })
+create("UIStroke", { Color = Color3.fromRGB(80, 0, 0), Thickness = math.max(1, math.floor(CFG.Look.TitleStroke * scale)), Transparency = 0.3, Parent = introTitle })
+create("UIStroke", { Color = Color3.fromRGB(50, 0, 0), Thickness = math.max(1, math.floor(CFG.Look.SubStroke * scale)), Transparency = 0.35, Parent = introSub })
 
-local rebirthGrad = Instance.new("UIGradient")
-rebirthGrad.Rotation = 90
-rebirthGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)), -- Weißer Glow oben
-	ColorSequenceKeypoint.new(0.3, CFG.Look.RebirthColorA),
-	ColorSequenceKeypoint.new(1.0, CFG.Look.RebirthColorB),
-})
-rebirthGrad.Parent = rebirthTitle
-
--- Title & Sub Styling
-create("UIStroke", { Color = Color3.fromRGB(80, 0, 0), Thickness = math.max(1, math.floor(CFG.Look.TitleStroke * scale)), Transparency = 0.25, Parent = introTitle })
 local titleGrad = Instance.new("UIGradient")
 titleGrad.Rotation = 45
-titleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0.0, CFG.Look.TitleColorA), ColorSequenceKeypoint.new(0.5, CFG.Look.TitleColorB), ColorSequenceKeypoint.new(1.0, Color3.fromRGB(100, 0, 0)) })
+titleGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0.0, CFG.Look.TitleColorA),
+	ColorSequenceKeypoint.new(0.5, CFG.Look.TitleColorB),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(120, 0, 0))
+})
 titleGrad.Parent = introTitle
 
-create("UIStroke", { Color = Color3.fromRGB(50, 0, 0), Thickness = math.max(1, math.floor(CFG.Look.SubStroke * scale)), Transparency = 0.35, Parent = introSub })
 local subGrad = Instance.new("UIGradient")
 subGrad.Rotation = -45
-subGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 150, 150)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 50, 50)), ColorSequenceKeypoint.new(1.0, Color3.fromRGB(200, 0, 0)) })
+subGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 160, 160)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 70, 70)),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(200, 0, 0))
+})
 subGrad.Parent = introSub
 
-
--- Sparks System
 local sparks = {}
 local function spawnSpark(s)
-	s.t0 = os.clock() + rnd:NextNumber(0, 0.35)
-	s.life = rnd:NextNumber(0.45, 0.80)
+	s.t0 = os.clock() + rnd:NextNumber(0, 0.25)
+	s.life = rnd:NextNumber(0.45, 0.8)
 	s.dx0 = rnd:NextNumber(-CFG.Sparks.SpreadX, CFG.Sparks.SpreadX) * scale
 	s.dy0 = rnd:NextNumber(-CFG.Sparks.SpreadY, CFG.Sparks.SpreadY) * scale
-	s.rise = rnd:NextNumber(CFG.Sparks.RisePx * 0.85, CFG.Sparks.RisePx * 1.15) * scale
+	s.rise = rnd:NextNumber(CFG.Sparks.RisePx * 0.9, CFG.Sparks.RisePx * 1.1) * scale
 	s.size0 = rnd:NextNumber(CFG.Sparks.SizeMin, CFG.Sparks.SizeMax) * scale
 	s.size1 = s.size0 * rnd:NextNumber(0.25, 0.45)
 	s.rot0 = rnd:NextNumber(-15, 15)
@@ -293,9 +269,17 @@ end
 
 for i = 1, CFG.Sparks.Count do
 	local img = create("ImageLabel", {
-		Name = "Spark_" .. i, BackgroundTransparency = 1, BorderSizePixel = 0,
-		AnchorPoint = Vector2.new(0.5, 0.5), Position = firePos, Size = UDim2.fromOffset(0, 0),
-		ZIndex = 52, Image = CFG.Assets.Fire, ImageTransparency = 1, ScaleType = Enum.ScaleType.Fit, Parent = overlay,
+		Name = "Spark_" .. i,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = firePos,
+		Size = UDim2.fromOffset(0, 0),
+		ZIndex = 52,
+		Image = CFG.Assets.Fire,
+		ImageTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Parent = overlay,
 	})
 	create("UIAspectRatioConstraint", { AspectRatio = 1, Parent = img })
 	local s = { inst = img }
@@ -304,7 +288,7 @@ for i = 1, CFG.Sparks.Count do
 end
 
 pcall(function()
-	local list = { logo, logoShadow, introTitle, introSub, titleShadow, subShadow, rebirthTitle, rebirthShadow }
+	local list = { logo, logoShadow, introTitle, introSub, titleShadow, subShadow }
 	for _, s in ipairs(sparks) do table.insert(list, s.inst) end
 	ContentProvider:PreloadAsync(list)
 end)
@@ -320,7 +304,7 @@ local fadeInfo = TweenInfo.new(CFG.Times.FadeIn, Enum.EasingStyle.Quad, Enum.Eas
 local growInfo = TweenInfo.new(CFG.Times.Grow, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
 tween(logo, fadeInfo, { ImageTransparency = 0 })
-tween(logoShadow, fadeInfo, { ImageTransparency = 0.65 })
+tween(logoShadow, fadeInfo, { ImageTransparency = 0.7 })
 tween(introTitle, fadeInfo, { TextTransparency = 0 })
 tween(titleShadow, fadeInfo, { TextTransparency = 0.35 })
 tween(introSub, fadeInfo, { TextTransparency = 0 })
@@ -359,12 +343,11 @@ end)
 
 task.wait(CFG.Times.Grow)
 
--- BOB ANIMATION LOGO
 local baseLogoPos = logo.Position
 local baseShadowPos = logoShadow.Position
 local start = os.clock()
 local duration = CFG.Times.BobDuration
-local amplitudePx = 10 * scale
+local amplitudePx = 8 * scale
 local speedHz = 0.6
 
 while true do
@@ -381,72 +364,39 @@ logoShadow.Position = baseShadowPos
 
 task.wait(CFG.Times.Hold)
 
--- ========================================================
--- 🔥 THE REBIRTHED IMPACT SEQUENCE 🔥
--- ========================================================
-
--- 1. Fade old text out quickly to make space
-local fastFade = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-tween(introTitle, fastFade, { TextTransparency = 1, Position = UDim2.new(0.5, 0, 0.55, 0) })
-tween(titleShadow, fastFade, { TextTransparency = 1 })
-tween(introSub, fastFade, { TextTransparency = 1, Position = UDim2.new(0.5, 0, 0.62, 0) })
-tween(subShadow, fastFade, { TextTransparency = 1 })
-
-task.wait(CFG.Times.PreDropWait)
-
--- 2. Play Impact Sound
-local impactSound = create("Sound", {
-	SoundId = CFG.Assets.ImpactSfx,
-	Volume = 4,
-	Parent = SoundService,
-})
-impactSound:Play()
-pcall(function() impactSound.Ended:Connect(function() impactSound:Destroy() end) end)
-
--- 3. Drop "REBIRTHED" from the top
-local dropTw = TweenInfo.new(CFG.Times.DropAnim, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-rebirthTitle.TextTransparency = 0
-rebirthShadow.TextTransparency = 0.5
-tween(rebirthTitle, dropTw, { Position = rebirthEndPos })
-tween(rebirthShadow, dropTw, { Position = UDim2.new(0.5, 0, rebirthEndPos.Y.Scale, rebirthEndPos.Y.Offset + math.floor(4 * scale)) })
-
-task.wait(CFG.Times.DropAnim)
-
--- 4. Screen Shake & Logo Squash on Impact (Wucht)
-tween(logo, TweenInfo.new(0.08, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(baseLogo * 0.8, baseLogo * 0.8) })
-tween(logoShadow, TweenInfo.new(0.08, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(baseLogo * 0.8, baseLogo * 0.8) })
-
--- Kurzer Overlay Shake
-local origOverlayPos = overlay.Position
-for i = 1, 6 do
-	local shakeX = rnd:NextNumber(-15, 15) * scale
-	local shakeY = rnd:NextNumber(-15, 15) * scale
-	overlay.Position = UDim2.new(0, shakeX, 0, shakeY)
-	task.wait(0.02)
-end
-overlay.Position = origOverlayPos
-
--- Logo federt zurück
-tween(logo, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(baseLogo * 1.05, baseLogo * 1.05) })
-tween(logoShadow, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(baseLogo * 1.05, baseLogo * 1.05) })
-
--- Warten bis der Impact gewirkt hat
-task.wait(CFG.Times.HoldAfterDrop)
-
--- ========================================================
--- ENDE DER SEQUENCE
--- ========================================================
-
 if conn then conn:Disconnect() conn = nil end
 
 local out = TweenInfo.new(CFG.Times.FadeOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Fade out alles
-tween(rebirthTitle, out, { TextTransparency = 1, TextSize = 1 })
-tween(rebirthShadow, out, { TextTransparency = 1, TextSize = 1 })
+local moveDown = 24 * scale
 
-tween(logo, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
-tween(logoShadow, out, { ImageTransparency = 1, Size = UDim2.fromOffset(0, 0) })
+tween(introTitle, out, {
+	TextTransparency = 1,
+	Position = UDim2.new(titlePos.X.Scale, titlePos.X.Offset, titlePos.Y.Scale, titlePos.Y.Offset + moveDown)
+})
+tween(titleShadow, out, {
+	TextTransparency = 1,
+	Position = UDim2.new(titlePos.X.Scale, titlePos.X.Offset + math.floor(3 * scale), titlePos.Y.Scale, titlePos.Y.Offset + math.floor(3 * scale) + moveDown)
+})
+tween(introSub, out, {
+	TextTransparency = 1,
+	Position = UDim2.new(subPos.X.Scale, subPos.X.Offset, subPos.Y.Scale, subPos.Y.Offset + moveDown)
+})
+tween(subShadow, out, {
+	TextTransparency = 1,
+	Position = UDim2.new(subPos.X.Scale, subPos.X.Offset + math.floor(3 * scale), subPos.Y.Scale, subPos.Y.Offset + math.floor(3 * scale) + moveDown)
+})
+
+tween(logo, out, {
+	ImageTransparency = 1,
+	Size = UDim2.fromOffset(0, 0),
+	Position = UDim2.new(baseLogoPos.X.Scale, baseLogoPos.X.Offset, baseLogoPos.Y.Scale, baseLogoPos.Y.Offset + moveDown / 2)
+})
+tween(logoShadow, out, {
+	ImageTransparency = 1,
+	Size = UDim2.fromOffset(0, 0),
+	Position = UDim2.new(baseShadowPos.X.Scale, baseShadowPos.X.Offset, baseShadowPos.Y.Scale, baseShadowPos.Y.Offset + moveDown / 2)
+})
 tween(logoStroke, out, { Transparency = 1 })
 
 for _, s in ipairs(sparks) do
@@ -461,5 +411,4 @@ end
 task.wait(CFG.Times.FadeOut + 0.05)
 
 getgenv().SchmecktIntroFinished = true
-
 pcall(function() if gui then gui:Destroy() end end)
